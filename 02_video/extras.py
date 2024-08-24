@@ -1,8 +1,84 @@
 import numpy as np
-import paclab
 import pandas
 import my.plot
 import scipy.stats
+
+def generate_box_port_dir_df():
+    """Returns the direction of each port.
+    
+    Returns: DataFrame
+        index: integers
+        columns: box, port, dir
+            box: name of parent pi
+            port: name of port
+            dir: direction of port, with 0 indicating north and 90 east
+    """
+    box2port_name2port_dir = {
+        'rpi_parent01': {
+            'rpi09_L': 315,
+            'rpi09_R': 0,
+            'rpi10_L': 45,
+            'rpi10_R': 90,
+            'rpi11_L': 135,
+            'rpi11_R': 180,
+            'rpi12_L': 225,
+            'rpi12_R': 270,
+        },
+        'rpi_parent02': {
+            'rpi07_L': 315,
+            'rpi07_R': 0,
+            'rpi08_L': 45,
+            'rpi08_R': 90,
+            'rpi05_L': 135,
+            'rpi05_R': 180,
+            'rpi06_L': 225,
+            'rpi06_R': 270,
+        },    
+        'rpiparent03': {
+            'rpi01_L': 225,
+            'rpi01_R': 270,
+            'rpi02_L': 315,
+            'rpi02_R': 0,
+            'rpi03_L': 45,
+            'rpi03_R': 90,
+            'rpi04_L': 135,
+            'rpi04_R': 180,
+        }, 
+        'rpiparent04': {
+            'rpi18_L': 90,
+            'rpi18_R': 135,
+            'rpi19_L': 180,
+            'rpi19_R': 225,
+            'rpi20_L': 270,
+            'rpi20_R': 315,
+            'rpi21_L': 0,
+            'rpi21_R': 45,
+        },
+    }    
+
+    # Parse
+    ser_d = {}
+    for box_name, port_name2port_dir in box2port_name2port_dir.items():
+        ser = pandas.Series(port_name2port_dir, name='dir')
+        ser.index.name = 'port'
+        ser_d[box_name] = ser
+
+    # Concat
+    box_port_dir_df = pandas.concat(ser_d, names=['box']).reset_index()
+    
+    # Convert degrees to cardinal directions
+    box_port_dir_df['cardinal'] = box_port_dir_df['dir'].replace({
+        0: 'N',
+        45: 'NE',
+        90: 'E',
+        135: 'SE',
+        180: 'S',
+        225: 'SW',
+        270: 'W',
+        315: 'NW',
+        })
+    
+    return box_port_dir_df
 
 def add_columns_to_crossings(pokes_with_crossings, synced_big_crossings_df, trial_data):
     """Adds columns to synced_big_crossings_df
@@ -41,7 +117,7 @@ def add_columns_to_crossings(pokes_with_crossings, synced_big_crossings_df, tria
     # Translate previousy_rewarded_port into a region number
     # This has to match the numbering when regions were assigned
     chamber_order = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW']
-    box_port_dir_df = paclab.parse.generate_box_port_dir_df()
+    box_port_dir_df = generate_box_port_dir_df()
     box_port_dir_df['region'] = box_port_dir_df['cardinal'].map(
         pandas.Series(dict([(v, k) for k, v in enumerate(chamber_order)])))
 
