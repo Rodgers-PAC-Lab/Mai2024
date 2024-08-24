@@ -17,8 +17,18 @@ my.plot.manuscript_defaults()
 my.plot.font_embed()
 
 # Paths
-repository_dir = os.path.expanduser(
-    '~/mnt/cuttlefish/chris/data/20240817_ss_paper')
+load_path = os.path.abspath('../path_to_downloaded_data')
+try:
+    with open(load_path) as fi:
+        repository_dir = fi.readlines()[0].strip()
+except FileNotFoundError:
+    raise IOError(
+        'you need to download the data and specify its location in ' + 
+        load_path)
+
+if not os.path.exists(repository_dir):
+    raise IOError(
+        'downloaded data must exist in directory {}'.format(repository_dir))
     
     
 ## Load data from main1
